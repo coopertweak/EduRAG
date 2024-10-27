@@ -1,0 +1,16 @@
+pip install:
+    langchain_openai
+    python-dotenv
+    fastapi uvicorn
+    langchain 
+    langchain-openai 
+    langchain-core 
+    langchain_community 
+    docx2txt pypdf  
+    langchain_chroma 
+    sentence_transformers
+
+Development Run:
+    uvicorn main:app -reload
+    streamlit run .\streamlit_app.py
+
