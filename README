@@ -1,3 +1,9 @@
+This app uses FastAPI for the backend and Streamlit for the front end.  See api and app directories respectively.
+
+Setup:
+create a .env file using the example. FAST_API_URL is only nessisary when deploying to production, defaults to localhost:8000. external APIs can be tested with tests/hello_openai.py
+
+Requirements are in requirements.txt and can be built with pip install -r requirements.txt
 pip install:
     streamlit
     python-dotenv
@@ -13,19 +19,18 @@ pip install:
     sentence-transformers
 
 Development Run:
-    uvicorn api.main:app --reload
-    streamlit run app/streamlit_app.py
+    Build: pip install -r requirements.txt
+    Start FastAPI Backend: uvicorn api.main:app --reload
+    Start Streamlit Frontend: streamlit run app/streamlit_app.py
 
-    Check FastAPI: http://127.0.0.1:8000/docs
-    Streamlit UI:  http://localhost:8501/
+    Check FastAPI: http://127.0.0.1:8000/docs for api endpoints
+    Streamlit UI:  http://localhost:8501/ for development frontend
 
 Production Run:
     Build Command: pip install -r requirements.txt
     Start Command: ./start.sh
     
-(setup for a render webservice)
+(start.sh script setup for a render webservice)
 
 
-Main Changelog:
-12/7/24 - Added default document upload and protections at streamlit frontend (sidebar) and API backend in main.py and db_tils.py
 
