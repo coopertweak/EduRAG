@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from .db_utils import get_document_by_id
 
 # Load environment variables from .env file
 load_dotenv()
@@ -75,6 +76,16 @@ def list_documents():
 
 @app.post("/delete-doc")
 def delete_document(request: DeleteFileRequest):
+    # Fetch the document details
+    document = get_document_by_id(request.file_id)
+    
+    # Check if this is the default document  -- **** Failsafe here in main.py uses fuction in db_utils.py ****
+    if document and document['filename'] == 'OpenStaxHSPhysics.pdf':
+        raise HTTPException(
+            status_code=403, 
+            detail="The default document cannot be deleted."
+        )
+
     # Delete from Chroma
     chroma_delete_success = delete_doc_from_chroma(request.file_id)
 

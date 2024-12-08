@@ -19,3 +19,4 @@ Development Run:
     Streamlit UI:  http://localhost:8501/
 
 
+Added default document upload and protections at Sidebar frontend and  API backend in main.py and db_tils.py
