@@ -88,7 +88,7 @@ def display_sidebar():
                     st.session_state.documents = list_documents()
 
     # Sidebar: List Documents
-    st.sidebar.header("Uploaded Documents")
+    st.sidebar.header("Current Context")
     if st.sidebar.button("Refresh Document List"):
         with st.spinner("Refreshing..."):
             st.session_state.documents = list_documents()
