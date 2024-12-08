@@ -74,10 +74,10 @@ def display_sidebar():
 
     # Sidebar: Model Selection
     model_options = ["gpt-4o", "gpt-4o-mini"]
-    st.sidebar.selectbox("Select Model", options=model_options, key="model")
+    st.sidebar.selectbox("AI Model", options=model_options, key="model")
 
     # Sidebar: Upload Document
-    st.sidebar.header("Upload Document")
+    st.sidebar.header("Add Documents:")
     uploaded_file = st.sidebar.file_uploader("Choose a file", type=["pdf", "docx", "html"])
     if uploaded_file is not None:
         if st.sidebar.button("Upload"):
