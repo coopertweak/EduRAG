@@ -6,10 +6,11 @@ pip install:
     langchain 
     langchain-openai 
     langchain-core 
-    langchain_community 
-    docx2txt pypdf  
+    langchain-community 
+    docx2txt 
+    pypdf  
     langchain_chroma 
-    sentence_transformers
+    sentence-transformers
 
 Development Run:
     uvicorn api.main:app --reload
