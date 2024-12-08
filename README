@@ -2,7 +2,8 @@ pip install:
     streamlit
     langchain_openai
     python-dotenv
-    fastapi uvicorn
+    fastapi 
+    uvicorn
     langchain 
     langchain-openai 
     langchain-core 
