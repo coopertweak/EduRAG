@@ -71,6 +71,15 @@ def get_all_documents():
     conn.close()
     return [dict(doc) for doc in documents]
 
+#added as failsafe for default document deletion
+def get_document_by_id(file_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM document_store WHERE id = ?', (file_id,))
+    document = cursor.fetchone()
+    conn.close()
+    return dict(document) if document else None
+
 # Initialize the database tables
 create_application_logs()
 create_document_store()
