@@ -27,10 +27,16 @@ Development Run:
     Streamlit UI:  http://localhost:8501/ for development frontend
 
 Production Run:
+Backend-
     Build Command: pip install -r requirements.txt
-    Start Command: ./start.sh
+    Start Command: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+
+Frontend-
+    Build Command: pip install -r requirements.txt
+    Start Command: streamlit run app/streamlit_app.py --server.port $PORT --server.address 0.0.0.0
     
-(start.sh script setup for a render webservice)
+    
+(two seperate services on render - backend api and frontend)
 
 
 
