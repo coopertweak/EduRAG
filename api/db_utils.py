@@ -80,6 +80,31 @@ def get_document_by_id(file_id):
     conn.close()
     return dict(document) if document else None
 
+def cleanup_old_documents():
+    """Periodically clean up old documents"""
+    try:
+        MAX_DOCS = 5  # Keep only last 5 documents
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all documents except the default one
+        cursor.execute('''
+            SELECT id FROM document_store 
+            WHERE filename != 'OpenStaxHSPhysics.pdf'
+            ORDER BY upload_timestamp DESC
+        ''')
+        
+        all_docs = cursor.fetchall()
+        docs_to_delete = all_docs[MAX_DOCS:]
+        
+        for doc in docs_to_delete:
+            delete_document_record(doc['id'])
+            delete_doc_from_chroma(doc['id'])
+            
+        conn.close()
+    except Exception as e:
+        print(f"Error during cleanup: {e}")
+
 # Initialize the database tables
 create_application_logs()
 create_document_store()
