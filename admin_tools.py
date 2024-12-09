@@ -13,14 +13,29 @@ def list_documents():
 
 def delete_document(file_id: int):
     headers = {
-        'admin_token': ADMIN_TOKEN
+        'admin_token': ADMIN_TOKEN,
+        'Content-Type': 'application/json'
     }
-    response = requests.post(
-        f"{API_URL}/admin/delete-doc",
-        headers=headers,
-        json={"file_id": file_id}
-    )
-    return response.json()
+    try:
+        # Make sure we're using the full URL
+        response = requests.post(
+            f"{API_URL}/admin/delete-doc",
+            headers=headers,
+            json={"file_id": file_id},
+            timeout=30  # Add timeout
+        )
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Error: Status code {response.status_code}")
+            print(f"Response: {response.text}")
+            return None
+    except requests.exceptions.ConnectionError:
+        print(f"Connection error. Make sure your API_URL environment variable ({API_URL}) is correct and the service is running.")
+        return None
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None
 
 if __name__ == "__main__":
     while True:
