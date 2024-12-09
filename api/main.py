@@ -6,6 +6,11 @@ from .db_utils import get_document_by_id
 # Load environment variables from .env file
 load_dotenv()
 
+from .db_utils import (
+    insert_application_logs, get_chat_history, get_all_documents, 
+    insert_document_record, delete_document_record, cleanup_old_documents
+)
+
 from .pydantic_models import QueryInput, QueryResponse, DocumentInfo, DeleteFileRequest
 from .langchain_utils import get_rag_chain
 from .db_utils import insert_application_logs, get_chat_history, get_all_documents, insert_document_record, delete_document_record
@@ -76,12 +81,12 @@ async def upload_and_index_document(file: UploadFile = File(...)):
         success = index_document_to_chroma(temp_file_path, file_id)
         
         if success:
-        # Cleanup old documents after successful upload
-        cleanup_old_documents()
-        return {
-            "message": f"File {file.filename} uploaded and indexed.",
-            "file_id": file_id
-        }
+            # Cleanup old documents after successful upload
+            cleanup_old_documents()
+            return {
+                "message": f"File {file.filename} uploaded and indexed.",
+                "file_id": file_id
+            }
         else:
             delete_document_record(file_id)
             raise HTTPException(
