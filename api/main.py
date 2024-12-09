@@ -56,8 +56,8 @@ async def upload_and_index_document(file: UploadFile = File(...)):
         )
     
     # Create temp directory if it doesn't exist
-    os.makedirs("temp", exist_ok=True)
-    temp_file_path = os.path.join("temp", f"temp_{file.filename}")
+    os.makedirs("/data/temp", exist_ok=True)
+    temp_file_path = os.path.join("/data/temp", f"temp_{file.filename}")
     
     try:
         file_size = 0

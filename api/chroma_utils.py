@@ -13,7 +13,7 @@ CHROMA_SETTINGS = Settings(
     anonymized_telemetry=False,
     allow_reset=True,
     is_persistent=True,
-    persist_directory="./chroma_db",
+    persist_directory="/data/chroma_db",  # Updated path to use render's persistant disk
 )
 
 # Optimize text splitting with smaller chunks
