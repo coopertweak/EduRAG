@@ -44,30 +44,50 @@ import os
 import shutil
 
 @app.post("/upload-doc")
-def upload_and_index_document(file: UploadFile = File(...)):
+async def upload_and_index_document(file: UploadFile = File(...)):
     allowed_extensions = ['.pdf', '.docx', '.html']
     file_extension = os.path.splitext(file.filename)[1].lower()
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB limit
     
     if file_extension not in allowed_extensions:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type. Allowed types are: {', '.join(allowed_extensions)}")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Unsupported file type. Allowed types are: {', '.join(allowed_extensions)}"
+        )
     
     # Create temp directory if it doesn't exist
-    os.makedirs("temp", exist_ok=True)
-    temp_file_path = os.path.join("temp", f"temp_{file.filename}")
+    os.makedirs("/data/temp", exist_ok=True)
+    temp_file_path = os.path.join("/data/temp", f"temp_{file.filename}")
     
     try:
-        # Save the uploaded file to a temporary file
+        file_size = 0
+        # Stream file to disk instead of loading into memory
         with open(temp_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            while chunk := await file.read(8192):  # Read in 8KB chunks
+                file_size += len(chunk)
+                if file_size > MAX_FILE_SIZE:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="File too large. Maximum size is 10MB."
+                    )
+                buffer.write(chunk)
         
         file_id = insert_document_record(file.filename)
         success = index_document_to_chroma(temp_file_path, file_id)
         
         if success:
-            return {"message": f"File {file.filename} has been successfully uploaded and indexed.", "file_id": file_id}
+        # Cleanup old documents after successful upload
+        cleanup_old_documents()
+        return {
+            "message": f"File {file.filename} uploaded and indexed.",
+            "file_id": file_id
+        }
         else:
             delete_document_record(file_id)
-            raise HTTPException(status_code=500, detail=f"Failed to index {file.filename}.")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to index {file.filename}."
+            )
     except Exception as e:
         print(f"Error during upload: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

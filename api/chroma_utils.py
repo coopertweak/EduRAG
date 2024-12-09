@@ -4,11 +4,31 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from typing import List
 from langchain_core.documents import Document
+from chromadb.config import Settings
 import os
+import gc
 
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, length_function=len)
+# Add Chroma settings
+CHROMA_SETTINGS = Settings(
+    anonymized_telemetry=False,
+    allow_reset=True,
+    is_persistent=True,
+    persist_directory="/data/chroma_db",  # Updated path to use render's persistant disk
+)
+
+# Optimize text splitting with smaller chunks
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,  # Reduced from 1000
+    chunk_overlap=50,  # Reduced from 200
+    length_function=len
+)
+
 embedding_function = OpenAIEmbeddings()
-vectorstore = Chroma(persist_directory="./chroma_db", embedding_function=embedding_function)
+vectorstore = Chroma(
+    persist_directory="./chroma_db", 
+    embedding_function=embedding_function,
+    client_settings=CHROMA_SETTINGS
+)
 
 def load_and_split_document(file_path: str) -> List[Document]:
     if file_path.endswith('.pdf'):
@@ -31,8 +51,14 @@ def index_document_to_chroma(file_path: str, file_id: int) -> bool:
         for split in splits:
             split.metadata['file_id'] = file_id
         
-        vectorstore.add_documents(splits)
-        # vectorstore.persist()
+        # Process in batches to manage memory
+        BATCH_SIZE = 100
+        for i in range(0, len(splits), BATCH_SIZE):
+            batch = splits[i:i + BATCH_SIZE]
+            vectorstore.add_documents(batch)
+            # Force garbage collection after each batch
+            gc.collect()
+            
         return True
     except Exception as e:
         print(f"Error indexing document: {e}")
@@ -45,6 +71,9 @@ def delete_doc_from_chroma(file_id: int):
         
         vectorstore._collection.delete(where={"file_id": file_id})
         print(f"Deleted all documents with file_id {file_id}")
+        
+        # Force garbage collection after deletion
+        gc.collect()
         
         return True
     except Exception as e:
