@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Header
 from .db_utils import get_document_by_id
 
 # Load environment variables from .env file
@@ -103,3 +103,22 @@ def delete_document(request: DeleteFileRequest):
             return {"error": f"Deleted from Chroma but failed to delete document with file_id {request.file_id} from the database."}
     else:
         return {"error": f"Failed to delete document with file_id {request.file_id} from Chroma."}
+
+#Add the ability for an admin to delete default documents
+@app.post("/admin/delete-doc")
+async def admin_delete_document(file_id: int, admin_token: str = Header(None)):
+    if admin_token != os.getenv("ADMIN_TOKEN"):
+        raise HTTPException(status_code=403, detail="Invalid admin token")
+    
+    # Delete from Chroma
+    chroma_delete_success = delete_doc_from_chroma(file_id)
+
+    if chroma_delete_success:
+        # If successfully deleted from Chroma, delete from our database
+        db_delete_success = delete_document_record(file_id)
+        if db_delete_success:
+            return {"message": f"Successfully deleted document with file_id {file_id} from the system."}
+        else:
+            return {"error": f"Deleted from Chroma but failed to delete document with file_id {file_id} from the database."}
+    else:
+        return {"error": f"Failed to delete document with file_id {file_id} from Chroma."}
