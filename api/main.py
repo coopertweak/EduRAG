@@ -51,7 +51,9 @@ def upload_and_index_document(file: UploadFile = File(...)):
     if file_extension not in allowed_extensions:
         raise HTTPException(status_code=400, detail=f"Unsupported file type. Allowed types are: {', '.join(allowed_extensions)}")
     
-    temp_file_path = f"temp_{file.filename}"
+    # Create temp directory if it doesn't exist
+    os.makedirs("temp", exist_ok=True)
+    temp_file_path = os.path.join("temp", f"temp_{file.filename}")
     
     try:
         # Save the uploaded file to a temporary file
@@ -66,6 +68,9 @@ def upload_and_index_document(file: UploadFile = File(...)):
         else:
             delete_document_record(file_id)
             raise HTTPException(status_code=500, detail=f"Failed to index {file.filename}.")
+    except Exception as e:
+        print(f"Error during upload: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)

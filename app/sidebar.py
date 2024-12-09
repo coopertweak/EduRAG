@@ -3,14 +3,12 @@ from api_utils import upload_document, list_documents, delete_document
 import os
 
 def auto_upload_default_document():
-    default_docs_dir = 'default_docs'
+    """
+    Automatically upload a default document if no documents exist.
+    """
+    default_docs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'default_docs')
     
     print(f"Attempting to auto-upload from {os.path.abspath(default_docs_dir)}")
-    
-    # Check if the directory exists
-    if not os.path.exists(default_docs_dir):
-        print(f"Warning: {default_docs_dir} directory does not exist!")
-        return
     
     # Check if documents are already uploaded
     existing_documents = list_documents()
@@ -20,10 +18,26 @@ def auto_upload_default_document():
         print("Documents already exist, skipping auto-upload")
         return
     
+    # Check if the directory exists
+    if not os.path.exists(default_docs_dir):
+        print(f"Warning: {default_docs_dir} directory does not exist!")
+        # Try alternative path for production
+        alt_path = os.path.join(os.getcwd(), 'default_docs')
+        if os.path.exists(alt_path):
+            default_docs_dir = alt_path
+        else:
+            print(f"Alternative path {alt_path} also does not exist!")
+            return
+
     # List contents of the default_docs directory
     try:
         default_files = os.listdir(default_docs_dir)
         print(f"Files in {default_docs_dir}: {default_files}")
+        
+        if not default_files:
+            print("No files found in default_docs directory")
+            return
+            
     except Exception as e:
         print(f"Error listing directory contents: {e}")
         return
@@ -56,14 +70,15 @@ def auto_upload_default_document():
                     upload_response = upload_document(uploaded_file)
                     print(f"Upload response for {filename}: {upload_response}")
                     
-                    # If upload is successful, break the loop
                     if upload_response:
                         st.toast(f"Auto-uploaded {filename} successfully!")
                         break
+                    else:
+                        print(f"Failed to upload {filename}, response was None")
                 
             except Exception as e:
-                print(f"Error uploading {filename}: {e}")
-                st.error(f"Failed to auto-upload {filename}: {e}")
+                print(f"Error uploading {filename}: {str(e)}")
+                st.error(f"Failed to auto-upload {filename}: {str(e)}")
 
 def display_sidebar():
     # Define protected documents that cannot be deleted
