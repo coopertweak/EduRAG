@@ -50,66 +50,104 @@ import shutil
 
 @app.post("/upload-doc")
 async def upload_and_index_document(file: UploadFile = File(...)):
-    allowed_extensions = ['.pdf', '.docx', '.html']
-    file_extension = os.path.splitext(file.filename)[1].lower()
-    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB limit
-    
-    if file_extension not in allowed_extensions:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Unsupported file type. Allowed types are: {', '.join(allowed_extensions)}"
-        )
-    
     try:
-        # Try to use /data first, fall back to /tmp if /data isn't available
-        base_temp_dir = "/data/temp" if os.access("/data", os.W_OK) else "/tmp"
-        os.makedirs(base_temp_dir, exist_ok=True)
-        temp_file_path = os.path.join(base_temp_dir, f"temp_{file.filename}")
+        # Log incoming request details
+        print(f"Upload request received for file: {file.filename}")
+        print(f"Content type: {file.content_type}")
         
-        print(f"Using temp directory: {base_temp_dir}")  # Debug print
+        allowed_extensions = ['.pdf', '.docx', '.html']
+        file_extension = os.path.splitext(file.filename)[1].lower()
+        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB limit
         
-        file_size = 0
-        # Stream file to disk instead of loading into memory
-        with open(temp_file_path, "wb") as buffer:
-            while chunk := await file.read(8192):  # Read in 8KB chunks
-                file_size += len(chunk)
-                if file_size > MAX_FILE_SIZE:
-                    raise HTTPException(
-                        status_code=413,
-                        detail="File too large. Maximum size is 10MB."
-                    )
-                buffer.write(chunk)
+        print(f"File extension: {file_extension}")
+        print(f"Checking against allowed extensions: {allowed_extensions}")
         
-        file_id = insert_document_record(file.filename)
-        success = index_document_to_chroma(temp_file_path, file_id)
+        if file_extension not in allowed_extensions:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported file type. Allowed types are: {', '.join(allowed_extensions)}"
+            )
         
-        if success:
-            # Cleanup old documents after successful upload
-            cleanup_old_documents()
-            return {
-                "message": f"File {file.filename} uploaded and indexed.",
-                "file_id": file_id
-            }
-        else:
-            delete_document_record(file_id)
+        try:
+            # Try to use /data first, fall back to /tmp if /data isn't available
+            base_temp_dir = "/data/temp" if os.access("/data", os.W_OK) else "/tmp"
+            print(f"Using base temp directory: {base_temp_dir}")
+            print(f"Directory exists: {os.path.exists(base_temp_dir)}")
+            print(f"Directory is writable: {os.access(base_temp_dir, os.W_OK)}")
+            
+            os.makedirs(base_temp_dir, exist_ok=True)
+            temp_file_path = os.path.join(base_temp_dir, f"temp_{file.filename}")
+            print(f"Created temp file path: {temp_file_path}")
+            
+            file_size = 0
+            print("Starting to read file...")
+            
+            with open(temp_file_path, "wb") as buffer:
+                while chunk := await file.read(8192):
+                    file_size += len(chunk)
+                    if file_size > MAX_FILE_SIZE:
+                        os.remove(temp_file_path)  # Clean up
+                        raise HTTPException(
+                            status_code=413,
+                            detail="File too large. Maximum size is 10MB."
+                        )
+                    buffer.write(chunk)
+            
+            print(f"File written to temp location. Size: {file_size} bytes")
+            
+            print("Inserting document record...")
+            file_id = insert_document_record(file.filename)
+            print(f"Document record inserted with ID: {file_id}")
+            
+            print("Indexing document to Chroma...")
+            success = index_document_to_chroma(temp_file_path, file_id)
+            print(f"Chroma indexing result: {success}")
+            
+            if success:
+                try:
+                    cleanup_old_documents()
+                except Exception as cleanup_error:
+                    print(f"Warning: Cleanup error: {cleanup_error}")
+                    
+                return {
+                    "message": f"File {file.filename} uploaded and indexed.",
+                    "file_id": file_id
+                }
+            else:
+                print("Failed to index document in Chroma")
+                delete_document_record(file_id)
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to index {file.filename}."
+                )
+                
+        except Exception as e:
+            print(f"Error in file processing: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to index {file.filename}."
+                detail=f"Error processing upload: {str(e)}"
             )
-    except Exception as e:
-        print(f"Error during upload: {str(e)}")  # Debug print
+            
+    except Exception as outer_e:
+        print(f"Outer error: {str(outer_e)}")
+        print(f"Outer error type: {type(outer_e)}")
         import traceback
-        print(f"Full error traceback: {traceback.format_exc()}")  # Detailed error
+        print(f"Outer traceback: {traceback.format_exc()}")
         raise HTTPException(
-            status_code=500, 
-            detail=f"Error processing upload: {str(e)}"
+            status_code=500,
+            detail=f"Error processing upload: {str(outer_e)}"
         )
+        
     finally:
-        if os.path.exists(temp_file_path):
-            try:
+        try:
+            if 'temp_file_path' in locals() and os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
-            except Exception as e:
-                print(f"Error removing temp file: {str(e)}")
+                print(f"Cleaned up temp file: {temp_file_path}")
+        except Exception as cleanup_e:
+            print(f"Error during cleanup: {cleanup_e}")
 
 @app.get("/list-docs", response_model=list[DocumentInfo])
 def list_documents():
