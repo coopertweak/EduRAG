@@ -60,11 +60,14 @@ async def upload_and_index_document(file: UploadFile = File(...)):
             detail=f"Unsupported file type. Allowed types are: {', '.join(allowed_extensions)}"
         )
     
-    # Create temp directory if it doesn't exist
-    os.makedirs("/data/temp", exist_ok=True)
-    temp_file_path = os.path.join("/data/temp", f"temp_{file.filename}")
-    
     try:
+        # Try to use /data first, fall back to /tmp if /data isn't available
+        base_temp_dir = "/data/temp" if os.access("/data", os.W_OK) else "/tmp"
+        os.makedirs(base_temp_dir, exist_ok=True)
+        temp_file_path = os.path.join(base_temp_dir, f"temp_{file.filename}")
+        
+        print(f"Using temp directory: {base_temp_dir}")  # Debug print
+        
         file_size = 0
         # Stream file to disk instead of loading into memory
         with open(temp_file_path, "wb") as buffer:
@@ -94,11 +97,19 @@ async def upload_and_index_document(file: UploadFile = File(...)):
                 detail=f"Failed to index {file.filename}."
             )
     except Exception as e:
-        print(f"Error during upload: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Error during upload: {str(e)}")  # Debug print
+        import traceback
+        print(f"Full error traceback: {traceback.format_exc()}")  # Detailed error
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error processing upload: {str(e)}"
+        )
     finally:
         if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
+            try:
+                os.remove(temp_file_path)
+            except Exception as e:
+                print(f"Error removing temp file: {str(e)}")
 
 @app.get("/list-docs", response_model=list[DocumentInfo])
 def list_documents():

@@ -8,12 +8,15 @@ from chromadb.config import Settings
 import os
 import gc
 
-# Add Chroma settings
+# Determine the base directory for Chroma
+CHROMA_BASE_DIR = "/data/chroma_db" if os.access("/data", os.W_OK) else "./chroma_db"
+print(f"Using Chroma directory: {CHROMA_BASE_DIR}")  # Debug print
+
 CHROMA_SETTINGS = Settings(
     anonymized_telemetry=False,
     allow_reset=True,
     is_persistent=True,
-    persist_directory="/data/chroma_db",  # Updated path to use render's persistant disk
+    persist_directory=CHROMA_BASE_DIR,
 )
 
 # Optimize text splitting with smaller chunks
