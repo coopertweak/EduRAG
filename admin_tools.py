@@ -39,17 +39,14 @@ def delete_document(file_id: int):
 def upload_default_document():
     default_doc_path = 'default_docs/OpenStaxHSPhysics.pdf'
     
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"Full path to document: {os.path.abspath(default_doc_path)}")
-    print(f"File exists: {os.path.exists(default_doc_path)}")
-    print(f"File size: {os.path.getsize(default_doc_path) if os.path.exists(default_doc_path) else 'N/A'} bytes")
-    
     if not os.path.exists(default_doc_path):
         print(f"Error: Default document not found at {default_doc_path}")
         return
-        
+    
+    file_size = os.path.getsize(default_doc_path)
+    print(f"Starting upload of {file_size/(1024*1024):.2f}MB file...")
+    
     try:
-        print(f"Attempting to upload to: {API_URL}/upload-doc")
         with open(default_doc_path, 'rb') as f:
             files = {
                 "file": (
@@ -58,28 +55,24 @@ def upload_default_document():
                     'application/pdf'
                 )
             }
-            print("File opened successfully, sending request...")
+            
             response = requests.post(
                 f"{API_URL}/upload-doc",
                 files=files,
-                timeout=60  # Increased timeout
+                timeout=180  # Increased timeout to 3 minutes
             )
             
-            print(f"Response status code: {response.status_code}")
-            print(f"Response headers: {response.headers}")
-            print(f"Full response text: {response.text}")
-            
+            print(f"Upload completed with status code: {response.status_code}")
             if response.status_code == 200:
                 print("Default document uploaded successfully!")
                 print(response.json())
             else:
                 print(f"Error uploading document: {response.status_code}")
-                print(response.text)
+                print(f"Response: {response.text}")
     except Exception as e:
+        print(f"Upload error: {str(e)}")
         import traceback
-        print(f"Detailed error: {str(e)}")
-        print("Full traceback:")
-        print(traceback.format_exc())
+        print(f"Traceback: {traceback.format_exc()}")
 
 def upload_custom_document(file_path: str):
     if not os.path.exists(file_path):
