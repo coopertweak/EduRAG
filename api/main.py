@@ -156,7 +156,7 @@ def delete_document(request: DeleteFileRequest):
 
 #Add the ability for an admin to delete default documents
 @app.post("/admin/delete-doc")
-async def admin_delete_document(file_id: int, admin_token: str = Header(None)):
+async def admin_delete_document(file_id: int = Query(...), admin_token: str = Header(None)):
     if admin_token != os.getenv("ADMIN_TOKEN"):
         raise HTTPException(status_code=403, detail="Invalid admin token")
     

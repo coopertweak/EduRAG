@@ -17,10 +17,10 @@ def delete_document(file_id: int):
         'Content-Type': 'application/json'
     }
     try:
+        # Now using query parameter instead of JSON body
         response = requests.post(
-            f"{API_URL}/admin/delete-doc",
+            f"{API_URL}/admin/delete-doc?file_id={file_id}",
             headers=headers,
-            json={"file_id": file_id},
             timeout=30
         )
         if response.status_code == 200:
@@ -48,6 +48,11 @@ def upload_default_document():
     
     try:
         with open(default_doc_path, 'rb') as f:
+            # Use a Session for better control
+            session = requests.Session()
+            session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+            
+            # Prepare the file upload
             files = {
                 "file": (
                     "OpenStaxHSPhysics.pdf",
@@ -56,23 +61,36 @@ def upload_default_document():
                 )
             }
             
-            response = requests.post(
+            # Increase timeout and add streaming
+            response = session.post(
                 f"{API_URL}/upload-doc",
                 files=files,
-                timeout=180  # Increased timeout to 3 minutes
+                timeout=300,  # 5 minutes
+                stream=True
             )
             
-            print(f"Upload completed with status code: {response.status_code}")
             if response.status_code == 200:
                 print("Default document uploaded successfully!")
                 print(response.json())
+                return True
             else:
                 print(f"Error uploading document: {response.status_code}")
                 print(f"Response: {response.text}")
+                return False
+                
+    except requests.exceptions.Timeout:
+        print("Upload timed out, but the file might have been uploaded successfully.")
+        print("Please check the document list to confirm.")
+        return False
+    except requests.exceptions.ConnectionError:
+        print("Connection error occurred, but the file might have been uploaded successfully.")
+        print("Please check the document list to confirm.")
+        return False
     except Exception as e:
         print(f"Upload error: {str(e)}")
         import traceback
         print(f"Traceback: {traceback.format_exc()}")
+        return False
 
 def upload_custom_document(file_path: str):
     if not os.path.exists(file_path):
