@@ -40,6 +40,11 @@ Frontend-
 
 
 --ADMIN TOOLS--
-added the ability to delete the default document by running a local script
+local script to:
+upload the default documents
+delete any document including the default document 
+list documents
+upload custom document
+
 Run the admin tool:
 python admin_tools.py

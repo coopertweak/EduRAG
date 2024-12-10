@@ -84,9 +84,6 @@ def display_sidebar():
     # Define protected documents that cannot be deleted
     PROTECTED_DOCUMENTS = ['OpenStaxHSPhysics.pdf']  # Add any more default documents here with a comma between like 'OpenStaxHSPhysics.pdf', 'Document2.pdf', 'Document3.pdf' 
     
-    # First, attempt to auto-upload a default document
-    auto_upload_default_document()
-
     # Sidebar: Model Selection
     model_options = ["gpt-4o", "gpt-4o-mini"]
     st.sidebar.selectbox("AI Model", options=model_options, key="model")
