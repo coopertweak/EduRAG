@@ -1,7 +1,7 @@
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, UnstructuredHTMLLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
+from langchain.vectorstores import Chroma  # <-- Important: Use this import
 from typing import List
 from langchain_core.documents import Document
 from chromadb.config import Settings
@@ -19,16 +19,15 @@ CHROMA_SETTINGS = Settings(
     persist_directory=CHROMA_BASE_DIR,
 )
 
-# Adjust text splitting parameters as needed
+# Revert to original chunk sizes
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,     # Reduced from 1000
-    chunk_overlap=50,   # Reduced from 200
+    chunk_size=1000,
+    chunk_overlap=200,
     length_function=len
 )
 
 embedding_function = OpenAIEmbeddings()
 
-# Make sure persist_directory matches CHROMA_BASE_DIR
 vectorstore = Chroma(
     persist_directory=CHROMA_BASE_DIR,
     embedding_function=embedding_function,
@@ -73,7 +72,7 @@ def index_document_to_chroma(file_path: str, file_id: int) -> bool:
             vectorstore.add_documents(batch)
             gc.collect()
 
-        # Persist the vectorstore after adding documents
+        # Persist the vector store after adding documents
         vectorstore.persist()
         print(f"Successfully indexed {len(splits)} chunks for file_id {file_id}")
         return True
@@ -93,7 +92,6 @@ def delete_doc_from_chroma(file_id: int):
         # Persist after deletion
         vectorstore.persist()
         print(f"Deleted all documents with file_id {file_id}")
-
         gc.collect()
         return True
     except Exception as e:
