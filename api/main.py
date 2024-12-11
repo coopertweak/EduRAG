@@ -144,15 +144,17 @@ def delete_document(request: DeleteFileRequest):
         return {"error": f"Failed to delete document with file_id {request.file_id} from Chroma."}
 
 @app.post("/admin/delete-doc")
-async def admin_delete_document(file_id: int = Query(...), admin_token: str = Header(None)):
+async def admin_delete_document(
+    file_id: int = Query(..., description="The ID of the document to delete"),
+    admin_token: str = Header(None, description="Admin authorization token")
+):
+    # Check the admin token from headers against the environment variable
     if admin_token != os.getenv("ADMIN_TOKEN"):
         raise HTTPException(status_code=403, detail="Invalid admin token")
     
-    # Delete from Chroma
+    # If token is valid, proceed with deletion logic
     chroma_delete_success = delete_doc_from_chroma(file_id)
-
     if chroma_delete_success:
-        # If successfully deleted from Chroma, delete from our database
         db_delete_success = delete_document_record(file_id)
         if db_delete_success:
             return {"message": f"Successfully deleted document with file_id {file_id} from the system."}

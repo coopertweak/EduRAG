@@ -9,15 +9,20 @@ ADMIN_TOKEN = os.getenv('ADMIN_TOKEN')
 
 def list_documents():
     response = requests.get(f"{API_URL}/list-docs")
-    return response.json()
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error listing documents: {response.status_code} - {response.text}")
+        return []
 
 def delete_document(file_id: int):
+    # The admin_delete_document endpoint requires:
+    #   1. 'file_id' as a query parameter
+    #   2. 'admin-token' as a header
     headers = {
-        'admin_token': ADMIN_TOKEN,
-        'Content-Type': 'application/json'
+        'admin-token': ADMIN_TOKEN
     }
     try:
-        # Now using query parameter instead of JSON body
         response = requests.post(
             f"{API_URL}/admin/delete-doc?file_id={file_id}",
             headers=headers,
@@ -41,18 +46,16 @@ def upload_default_document():
     
     if not os.path.exists(default_doc_path):
         print(f"Error: Default document not found at {default_doc_path}")
-        return
+        return False
     
     file_size = os.path.getsize(default_doc_path)
     print(f"Starting upload of {file_size/(1024*1024):.2f}MB file...")
     
     try:
         with open(default_doc_path, 'rb') as f:
-            # Use a Session for better control
             session = requests.Session()
             session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
             
-            # Prepare the file upload
             files = {
                 "file": (
                     "OpenStaxHSPhysics.pdf",
@@ -61,7 +64,6 @@ def upload_default_document():
                 )
             }
             
-            # Increase timeout and add streaming
             response = session.post(
                 f"{API_URL}/upload-doc",
                 files=files,
@@ -79,12 +81,10 @@ def upload_default_document():
                 return False
                 
     except requests.exceptions.Timeout:
-        print("Upload timed out, but the file might have been uploaded successfully.")
-        print("Please check the document list to confirm.")
+        print("Upload timed out. The file might have been uploaded, please check the document list.")
         return False
     except requests.exceptions.ConnectionError:
-        print("Connection error occurred, but the file might have been uploaded successfully.")
-        print("Please check the document list to confirm.")
+        print("Connection error occurred. Please check if the server is running and accessible.")
         return False
     except Exception as e:
         print(f"Upload error: {str(e)}")
@@ -96,7 +96,7 @@ def upload_custom_document(file_path: str):
     if not os.path.exists(file_path):
         print(f"Error: File not found at {file_path}")
         return
-        
+    
     try:
         with open(file_path, 'rb') as f:
             files = {"file": (os.path.basename(file_path), f)}
@@ -132,13 +132,19 @@ if __name__ == "__main__":
                 print(f"ID: {doc['id']}, Name: {doc['filename']}, Uploaded: {doc['upload_timestamp']}")
         
         elif choice == "2":
-            file_id = int(input("Enter the document ID to delete: "))
-            confirm = input(f"Are you sure you want to delete document {file_id}? (y/n): ")
-            if confirm.lower() == 'y':
-                result = delete_document(file_id)
-                print(result)
-            else:
-                print("Deletion cancelled.")
+            try:
+                file_id = int(input("Enter the document ID to delete: "))
+                confirm = input(f"Are you sure you want to delete document {file_id}? (y/n): ")
+                if confirm.lower() == 'y':
+                    result = delete_document(file_id)
+                    if result:
+                        print(result)
+                    else:
+                        print("Failed to delete the document.")
+                else:
+                    print("Deletion cancelled.")
+            except ValueError:
+                print("Invalid document ID. Please enter a valid integer.")
 
         elif choice == "3":
             confirm = input("Are you sure you want to upload the default document? (y/n): ")

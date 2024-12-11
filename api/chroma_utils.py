@@ -1,4 +1,5 @@
-from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, UnstructuredHTMLLoader
+from langchain.document_loaders import PyMuPDFLoader
+from langchain_community.document_loaders import Docx2txtLoader, UnstructuredHTMLLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma  # <-- Important: Use this import
@@ -36,7 +37,7 @@ vectorstore = Chroma(
 
 def load_and_split_document(file_path: str) -> List[Document]:
     if file_path.endswith('.pdf'):
-        loader = PyPDFLoader(file_path)
+        loader = PyMuPDFLoader(file_path)
     elif file_path.endswith('.docx'):
         loader = Docx2txtLoader(file_path)
     elif file_path.endswith('.html'):

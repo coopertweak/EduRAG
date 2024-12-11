@@ -13,3 +13,4 @@ chromadb
 openai
 langchain==0.1.11
 python-multipart
+pymupdf
