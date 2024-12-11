@@ -1,28 +1,23 @@
 import os
+import uuid
+import logging
+import shutil
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, UploadFile, HTTPException, Header
-from .db_utils import get_document_by_id
+from fastapi import FastAPI, File, UploadFile, HTTPException, Header, Query
+from .db_utils import (
+    insert_application_logs, get_chat_history, get_all_documents, 
+    insert_document_record, delete_document_record, cleanup_old_documents, get_document_by_id
+)
+from .pydantic_models import QueryInput, QueryResponse, DocumentInfo, DeleteFileRequest
+from .langchain_utils import get_rag_chain
+from .chroma_utils import index_document_to_chroma, delete_doc_from_chroma
 
 # Load environment variables from .env file
 load_dotenv()
 
-from .db_utils import (
-    insert_application_logs, get_chat_history, get_all_documents, 
-    insert_document_record, delete_document_record, cleanup_old_documents
-)
-
-from .pydantic_models import QueryInput, QueryResponse, DocumentInfo, DeleteFileRequest
-from .langchain_utils import get_rag_chain
-from .db_utils import insert_application_logs, get_chat_history, get_all_documents, insert_document_record, delete_document_record
-from .chroma_utils import index_document_to_chroma, delete_doc_from_chroma
-
-import uuid
-import logging
-
 logging.basicConfig(filename='app.log', level=logging.INFO)
 
 app = FastAPI()
-
 
 @app.post("/chat", response_model=QueryResponse)
 def chat(query_input: QueryInput):
@@ -30,8 +25,6 @@ def chat(query_input: QueryInput):
     logging.info(f"Session ID: {session_id}, User Query: {query_input.question}, Model: {query_input.model.value}")
     if not session_id:
         session_id = str(uuid.uuid4())
-
-    
 
     chat_history = get_chat_history(session_id)
     rag_chain = get_rag_chain(query_input.model.value)
@@ -43,10 +36,6 @@ def chat(query_input: QueryInput):
     insert_application_logs(session_id, query_input.question, answer, query_input.model.value)
     logging.info(f"Session ID: {session_id}, AI Response: {answer}")
     return QueryResponse(answer=answer, session_id=session_id, model=query_input.model)
-
-from fastapi import UploadFile, File, HTTPException
-import os
-import shutil
 
 @app.post("/upload-doc")
 async def upload_and_index_document(file: UploadFile = File(...)):
@@ -134,7 +123,7 @@ def delete_document(request: DeleteFileRequest):
     # Fetch the document details
     document = get_document_by_id(request.file_id)
     
-    # Check if this is the default document  -- **** Failsafe here in main.py uses fuction in db_utils.py ****
+    # Check if this is the default document
     if document and document['filename'] == 'OpenStaxHSPhysics.pdf':
         raise HTTPException(
             status_code=403, 
@@ -154,7 +143,6 @@ def delete_document(request: DeleteFileRequest):
     else:
         return {"error": f"Failed to delete document with file_id {request.file_id} from Chroma."}
 
-#Add the ability for an admin to delete default documents
 @app.post("/admin/delete-doc")
 async def admin_delete_document(file_id: int = Query(...), admin_token: str = Header(None)):
     if admin_token != os.getenv("ADMIN_TOKEN"):
