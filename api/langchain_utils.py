@@ -32,7 +32,7 @@ contextualize_q_prompt = ChatPromptTemplate.from_messages([
 
 
 qa_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful AI assistant. Use the following context to answer the user's question."),
+    ("system", "You are a helpful AI assistant. Use the following context to answer the user's question. The user is asking about the document(s) which includes a physics textbook. Your answer should be first aligned with the provided context from the documents. If the answer is not in the provided context, you can use your general understanding, but explain that your answer is enhanced by your understanding beyond the uploaded documents"),
     ("system", "Context: {context}"),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}")
