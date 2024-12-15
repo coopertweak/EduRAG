@@ -140,3 +140,14 @@ def display_sidebar():
                     else:
                         st.sidebar.error("Failed to delete document.")
 
+    # After all other sidebar elements, add a spacer and then the attribution
+    st.sidebar.markdown("---")  # Adds a horizontal line
+    st.sidebar.markdown("<br>" * 2, unsafe_allow_html=True)  # Add some space
+    st.sidebar.markdown("""
+    <div style='font-size: 0.8em; color: #666;'>
+    📚 <b>Educational Content Attribution:</b><br>
+    Default content provided by OpenStax High School Physics,<br>licensed under 
+    <a href='https://creativecommons.org/licenses/by/4.0/deed.en'>CC BY 4.0</a> by Texas Education Agency (TEA)
+    </div>
+    """, unsafe_allow_html=True)
+

@@ -1,7 +1,16 @@
-# 🤖 Retreval Augmented Chatbot - Chatbot Tutor
+# 🤖 Retrieval Augmented Chatbot - Chatbot Tutor
 
 ## 📋 Overview
-Configured as a RAG AI Chatbot for exploring textbooks, a default document is loaded with an admin tool and the user can upload their own documents for AI context as well. This application combines FastAPI for the backend API service and Streamlit for the frontend user interface. The project is organized into `api` and `app` directories respectively.
+A RAG AI Chatbot designed for exploring textbooks and educational materials. The application includes OpenStax High School Physics as a default document and allows users to upload additional documents for AI context. Built with FastAPI backend and Streamlit frontend, organized in `api` and `app` directories.
+
+## 📚 Default Educational Content
+This application comes pre-loaded with OpenStax High School Physics textbook, which is licensed under Creative Commons Attribution License 4.0 (CC BY 4.0) by Texas Education Agency (TEA). The content is used for educational purposes and proper attribution is maintained throughout the application.
+
+### Attribution
+- **Source**: OpenStax High School Physics
+- **Provider**: Texas Education Agency (TEA)
+- **License**: [Creative Commons Attribution License v4.0](https://creativecommons.org/licenses/by/4.0/deed.en)
+- **Usage**: Content is used for educational purposes through AI-assisted retrieval and generation
 
 ## ⚙️ Setup
 1. Create a `.env` file using the provided example
@@ -65,3 +74,14 @@ A local script is provided for document management:
 ```bash
 python admin_tools.py
 ```
+
+## 📄 Licensing
+This project combines multiple licenses:
+
+1. **Application Code**: MIT License
+2. **Default Content**: Creative Commons Attribution License 4.0 (CC BY 4.0)
+   - When using content from the default OpenStax textbook, proper attribution must be maintained
+   - Any modifications or adaptations must be indicated
+   - Commercial use is permitted under the terms of CC BY 4.0
+
+For more information about the CC BY 4.0 license, visit the [official license deed](https://creativecommons.org/licenses/by/4.0/deed.en).
