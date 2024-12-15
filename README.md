@@ -4,7 +4,7 @@
 A RAG AI Chatbot designed for exploring textbooks and educational materials. The application includes OpenStax High School Physics as a default document and allows users to upload additional documents for AI context. Built with FastAPI backend and Streamlit frontend, organized in `api` and `app` directories.
 
 ## 📚 Default Educational Content
-This application comes pre-loaded with OpenStax High School Physics textbook, which is licensed under Creative Commons Attribution License 4.0 (CC BY 4.0) by Texas Education Agency (TEA). The content is used for educational purposes and proper attribution is maintained throughout the application.
+This application comes pre-loaded with OpenStax High School Physics textbook, which is licensed under Creative Commons Attribution License 4.0 (CC BY 4.0) by Texas Education Agency (TEA). The content is used for educational purposes and proper attribution should be maintained throughout the application.
 
 ### Attribution
 - **Source**: OpenStax High School Physics
@@ -81,7 +81,5 @@ This project combines multiple licenses:
 1. **Application Code**: MIT License
 2. **Default Content**: Creative Commons Attribution License 4.0 (CC BY 4.0)
    - When using content from the default OpenStax textbook, proper attribution must be maintained
-   - Any modifications or adaptations must be indicated
-   - Commercial use is permitted under the terms of CC BY 4.0
 
 For more information about the CC BY 4.0 license, visit the [official license deed](https://creativecommons.org/licenses/by/4.0/deed.en).
